@@ -8,36 +8,61 @@ app = Flask(__name__)
 # Load the model
 model = joblib.load("heartmodel.joblib")
 
+# Function to map categorical values to numerical values
+def map_category_values(data):
+    mapping = {
+        'ChestPainType': {'TA': 0, 'ATA': 1, 'NAP': 2, 'ASY': 3},
+        'Thalassemia': {'normal': 1, 'fixed defect': 2, 'reversable defect': 3}
+    }
+    for column, map_dict in mapping.items():
+        data[column] = data[column].map(map_dict)
+    return data
 
 @app.route('/')
 def home():
     return render_template('index.html')
-
 
 @app.route('/predict', methods=['POST'])
 def predict():
     # Get data from form
     data = request.form.to_dict()
     age = int(data['age'])
-    chest_pain_type = data['chest_pain_type']
-    max_heart_rate_achieved = int(data['max_heart_rate_achieved'])
-    st_depression = float(data['st_depression'])
-    thalassemia = data['thalassemia']
-    resting_blood_pressure = int(data['resting_blood_pressure'])
+    chest_pain_type = data['cp']
+    max_heart_rate_achieved = int(data['thalach'])
+    st_depression = float(data['oldpeak'])
+    thalassemia = data['thal']
 
     # Create a DataFrame for the input data
-    input_data = pd.DataFrame(data=[[age, 1, chest_pain_type, resting_blood_pressure, 0, 0, 0, max_heart_rate_achieved, 0, st_depression, 0, 0, thalassemia]],
-                              columns=['Age', 'Sex', 'ChestPainType', 'RestingBloodPressure', 'Cholesterol', 'FatingBloodSugar', 'RestingEcg', 'MaxHeartRateAchieved', 'ExerciseInducedAngina', 'StDepression', 'StSlope', 'NumMajorVessels', 'Thalassemia'])
+    input_data = pd.DataFrame({
+        'age': [age],
+        'ChestPainType': [chest_pain_type],
+        'thalach': [max_heart_rate_achieved],
+        'oldpeak': [st_depression],
+        'thal': [thalassemia]
+    })
 
-    all_features = ['Age', 'Sex', 'ChestPainType', 'RestingBloodPressure', 'Cholesterol', 'FatingBloodSugar', 'RestingEcg',
-                    'MaxHeartRateAchieved', 'ExerciseInducedAngina', 'StDepression', 'StSlope', 'NumMajorVessels', 'Thalassemia']
-    default_values = {'Sex': 1, 'RestingBloodPressure': 0, 'Cholesterol': 0, 'FatingBloodSugar': 0,
-                      'RestingEcg': 0, 'ExerciseInducedAngina': 0, 'StSlope': 0, 'NumMajorVessels': 0}
+    # Map categorical values to numerical values
+    input_data = map_category_values(input_data)
 
+    # Define all features and default values
+    all_features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
+                    'thalach', 'exang', 'oldpeak', 'slope']
+    default_values = {
+        'sex': 1,
+        'trestbps': 120,  # Example default value, replace with mean or median if available
+        'chol': 200,      # Example default value, replace with mean or median if available
+        'fbs': 0,
+        'restecg': 0,
+        'exang': 0,
+        'slope': 0
+    }
+
+    # Add missing features with default values
     for feature in all_features:
         if feature not in input_data.columns:
             input_data[feature] = default_values.get(feature, 0)
 
+    # Ensure the input data has the correct order of features
     input_data = input_data[all_features]
 
     # Predict using the model
@@ -46,12 +71,11 @@ def predict():
 
     # Prepare the response
     response = {
-        'prediction': prediction,
+        'prediction': 'Healthy' if prediction == 0 else 'Heart Disease',
         'probability': prediction_proba.tolist()
     }
 
     return jsonify(response)
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
