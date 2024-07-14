@@ -137,7 +137,14 @@
                         <div class="classification">
                             <div class="group-div">
                                 <div class="rectangle-div"></div>
-                                <h1 class="healthy">HEALTHY</h1>
+                                <h1 class="healthy">
+                                    {% if result %}
+                                        {{ result }}
+                                    {% endif %}
+                                    {% if error %}
+                                        {{ error }}
+                                    {% endif %}
+                                </h1>
                             </div>
                         </div>
                     </div>
