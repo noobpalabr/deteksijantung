@@ -16,7 +16,10 @@ def map_category_values(data):
         'thal': {'normal': 1, 'fixed defect': 2, 'reversable defect': 3}
     }
     for column, map_dict in mapping.items():
-        data[column] = data[column].map(map_dict)
+        if column in data.columns:
+            data[column] = data[column].map(map_dict)
+            # Print mapped values for debugging
+            print(f"Mapping column '{column}':", data[column])
     return data
 
 @app.route('/')
@@ -47,8 +50,14 @@ def predict():
             'trestbps': [trestbps]
         })
 
+        # Print input data before mapping
+        print("Input data before mapping:", input_data)
+
         # Map categorical values to numerical values
         input_data = map_category_values(input_data)
+
+        # Print input data after mapping
+        print("Input data after mapping:", input_data)
 
         # Define all features and default values
         all_features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
@@ -69,6 +78,9 @@ def predict():
 
         # Ensure the input data has the correct order of features
         input_data = input_data[all_features]
+
+        # Print input data before prediction
+        print("Input data before prediction:", input_data)
 
         # Check for NaN, infinity or excessively large values
         if input_data.isnull().values.any():
