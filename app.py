@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template, url_for
 import joblib
 import pandas as pd
+import numpy as np
 import os
 
 app = Flask(__name__)
@@ -68,6 +69,14 @@ def predict():
 
         # Ensure the input data has the correct order of features
         input_data = input_data[all_features]
+
+        # Check for NaN, infinity or excessively large values
+        if input_data.isnull().values.any():
+            raise ValueError("Input contains NaN values.")
+        if np.isinf(input_data.values).any():
+            raise ValueError("Input contains infinity values.")
+        if (np.abs(input_data.values) > np.finfo(np.float32).max).any():
+            raise ValueError("Input contains values too large for dtype('float32').")
 
         # Predict using the model
         prediction = model.predict(input_data)[0]
