@@ -9,19 +9,6 @@ app = Flask(__name__)
 # Load the model
 model = joblib.load("heartmodel.joblib")
 
-# Function to map categorical values to numerical values
-def map_category_values(data):
-    mapping = {
-        'cp': {'TA': 0, 'ATA': 1, 'NAP': 2, 'ASY': 3},
-        'thal': {'normal': 1, 'fixed defect': 2, 'reversable defect': 3}
-    }
-    for column, map_dict in mapping.items():
-        if column in data.columns:
-            data[column] = data[column].map(map_dict)
-            # Print mapped values for debugging
-            print(f"Mapping column '{column}':", data[column])
-    return data
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -34,10 +21,10 @@ def predict():
         print("Received form data:", data)
         
         age = int(data.get('age'))
-        cp = data.get('chest_pain_type')
+        cp = int(data.get('chest_pain_type'))
         thalach = int(data.get('max_heart_rate_achieved'))
         oldpeak = float(data.get('st_depression'))
-        thal = data.get('thalassemia')
+        thal = int(data.get('thalassemia'))
         trestbps = int(data.get('resting_blood_pressure'))
 
         # Create a DataFrame for the input data
@@ -50,14 +37,8 @@ def predict():
             'trestbps': [trestbps]
         })
 
-        # Print input data before mapping
-        print("Input data before mapping:", input_data)
-
-        # Map categorical values to numerical values
-        input_data = map_category_values(input_data)
-
-        # Print input data after mapping
-        print("Input data after mapping:", input_data)
+        # Print input data before adding default values
+        print("Input data before adding default values:", input_data)
 
         # Define all features and default values
         all_features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
