@@ -76,15 +76,13 @@ def predict():
         prediction_proba = model.predict_proba(input_data)[0]
 
         # Prepare the response
-        response = {
-            'prediction': 'Healthy' if prediction == 0 else 'Heart Disease',
-            'probability': prediction_proba.tolist()
-        }
+        result = 'Healthy' if prediction == 0 else 'Heart Disease'
+        probability = prediction_proba.tolist()
 
-        return jsonify(response)
+        return render_template('index.html', result=result, probability=probability)
     except Exception as e:
         print("Error during prediction:", str(e))
-        return jsonify({"error": str(e)}), 400
+        return render_template('index.html', error=str(e))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
