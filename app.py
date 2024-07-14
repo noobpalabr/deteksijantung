@@ -12,7 +12,7 @@ model = joblib.load("heartmodel.joblib")
 def map_category_values(data):
     mapping = {
         'ChestPainType': {'TA': 0, 'ATA': 1, 'NAP': 2, 'ASY': 3},
-        'Thalassemia': {'normal': 1, 'fixed defect': 2, 'reversable defect': 3}
+        'thal': {'normal': 1, 'fixed defect': 2, 'reversable defect': 3}
     }
     for column, map_dict in mapping.items():
         data[column] = data[column].map(map_dict)
